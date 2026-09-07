@@ -1,0 +1,16 @@
+{
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  }
+}

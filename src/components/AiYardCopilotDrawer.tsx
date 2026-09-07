@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { HeavyCraneAsset, WeldingBayAsset, CncCutterAsset, FleetSummary } from '../types/dashboard';
 import { cleanMarkdownContent } from '../utils/markdownUtils';
+import { generateIndustrialFallback } from '../utils/aiGateway';
 
 interface AiYardCopilotDrawerProps {
   isOpen: boolean;
