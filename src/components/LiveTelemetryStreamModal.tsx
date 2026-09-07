@@ -537,12 +537,12 @@ export const LiveTelemetryStreamModal: React.FC<LiveTelemetryStreamModalProps> =
               {isStreaming ? (
                 <>
                   <Pause className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="hidden xs:inline">{streamRateHz}Hz</span>
+                  <span className="hidden sm:inline">{streamRateHz}Hz</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span className="hidden xs:inline">PAUSED</span>
+                  <span className="hidden sm:inline">PAUSED</span>
                 </>
               )}
             </button>
@@ -736,7 +736,7 @@ export const LiveTelemetryStreamModal: React.FC<LiveTelemetryStreamModalProps> =
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-400 hidden xs:inline">Rate:</span>
+            <span className="text-[11px] text-slate-400 hidden sm:inline">Rate:</span>
             <div className="flex items-center bg-slate-900 rounded-lg border border-slate-800 p-0.5">
               {[1, 2, 5].map((hz) => (
                 <button

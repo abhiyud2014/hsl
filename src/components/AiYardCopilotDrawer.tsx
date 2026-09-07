@@ -237,7 +237,7 @@ Select a diagnostic quick action below or ask any question regarding machine str
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                  GEMINI 3.7 FLASH TELEMETRY AI
+                  GEMINI 3.8 FLASH TELEMETRY AI
                 </span>
                 <span className="text-[11px] text-slate-500 hidden sm:inline">Live IIoT Intelligence</span>
               </div>
@@ -453,7 +453,7 @@ Select a diagnostic quick action below or ask any question regarding machine str
           {isLoading && (
             <div className="flex items-center gap-2 p-3.5 bg-white border border-slate-200 rounded-2xl w-fit text-xs text-indigo-600 font-medium animate-pulse shadow-2xs">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Analyzing live IIoT stream with Gemini 3.7 Flash...</span>
+              <span>Analyzing live IIoT stream with Gemini 3.8 Flash...</span>
             </div>
           )}
         </div>

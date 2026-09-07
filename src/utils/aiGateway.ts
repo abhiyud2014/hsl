@@ -53,12 +53,12 @@ export async function generateWithGeminiFallback(
     throw new Error('GEMINI_API_KEY is not configured.');
   }
 
-  // Valid Gemini models in priority order
-  const modelsToAttempt = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  // Valid Gemini models in priority order (latest lineup)
+  const modelsToAttempt = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
   let lastError: any = null;
 
   for (const model of modelsToAttempt) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const generatePromise = client.models.generateContent({
           model,
@@ -69,9 +69,9 @@ export async function generateWithGeminiFallback(
           },
         });
 
-        // 8-second timeout guard
+        // 20-second timeout guard (newer models can be slower under load)
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Timeout waiting for ${model}`)), 8000)
+          setTimeout(() => reject(new Error(`Timeout waiting for ${model}`)), 20000)
         );
 
         const response = await Promise.race([generatePromise, timeoutPromise]);
@@ -89,8 +89,8 @@ export async function generateWithGeminiFallback(
           errMsg.includes('high demand') ||
           errMsg.includes('Timeout');
 
-        if (isTransient && attempt < 2) {
-          await new Promise((r) => setTimeout(r, 400 * attempt));
+        if (isTransient && attempt < 3) {
+          await new Promise((r) => setTimeout(r, 1000 * attempt));
           continue;
         }
 
@@ -98,7 +98,7 @@ export async function generateWithGeminiFallback(
         break;
       }
     }
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   throw lastError || new Error('All model endpoints unavailable.');

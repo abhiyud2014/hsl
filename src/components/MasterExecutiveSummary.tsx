@@ -390,7 +390,7 @@ export const MasterExecutiveSummary: React.FC<MasterExecutiveSummaryProps> = ({
                   : `${rangeMeta.incidentsResolved} Resolved`}
               </span>
             </div>
-            <p className="mt-2 text-xs text-slate-600 truncate">
+            <p className="mt-2 text-xs text-slate-600 truncate" title={summary.activeSafetyIncidents.length > 0 ? summary.activeSafetyIncidents[0].description : `Zero active proximity breaches (${rangeMeta.incidentsResolved} historical alarms cleared).`}>
               {summary.activeSafetyIncidents.length > 0 
                 ? summary.activeSafetyIncidents[0].description
                 : `Zero active proximity breaches (${rangeMeta.incidentsResolved} historical alarms cleared).`}
@@ -482,27 +482,30 @@ export const MasterExecutiveSummary: React.FC<MasterExecutiveSummaryProps> = ({
               <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-slate-200 text-xs font-semibold">
                 <button
                   onClick={() => setActiveChartTab('energy')}
-                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                     activeChartTab === 'energy' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  ⚡ Power Demand (kW)
+                  <Zap className="w-3.5 h-3.5" />
+                  Power Demand (kW)
                 </button>
                 <button
                   onClick={() => setActiveChartTab('oee')}
-                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                     activeChartTab === 'oee' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  📊 Fleet OEE (%)
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  Fleet OEE (%)
                 </button>
                 <button
                   onClick={() => setActiveChartTab('gas')}
-                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                     activeChartTab === 'gas' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  🔥 Shielding Gas & Lifts
+                  <Flame className="w-3.5 h-3.5" />
+                  Shielding Gas & Lifts
                 </button>
               </div>
             </div>
@@ -555,8 +558,8 @@ export const MasterExecutiveSummary: React.FC<MasterExecutiveSummaryProps> = ({
                   <span className="font-bold font-mono text-rose-700 uppercase tracking-wider text-[11px] px-2 py-0.5 bg-rose-100 rounded-md flex-shrink-0">
                     {incident.type}
                   </span>
-                  <span className="font-bold text-slate-900 truncate">{incident.assetName}:</span>
-                  <span className="text-slate-700 truncate">{incident.description}</span>
+                  <span className="font-bold text-slate-900 truncate" title={incident.assetName}>{incident.assetName}:</span>
+                  <span className="text-slate-700 truncate" title={incident.description}>{incident.description}</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-end">
                   <span className="font-mono text-[11px] text-slate-500 mr-1">{incident.time}</span>

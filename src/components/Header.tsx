@@ -78,12 +78,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-1.5">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-1.5 flex-wrap min-w-0">
                 SHIPYARD<span className="text-indigo-600">PULSE</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-200 hidden xs:inline-block">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-200 hidden sm:inline-block">
                   HSL VIZAG • YARD 11181
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 hidden xl:inline-block">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 shrink-0 whitespace-nowrap hidden xl:inline-block">
                   AIR-GAPPED ON-PREM EDGE
                 </span>
               </h1>

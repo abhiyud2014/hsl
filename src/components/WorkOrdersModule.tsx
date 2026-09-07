@@ -11,7 +11,8 @@ import {
   ArrowRight,
   Sparkles,
   Search,
-  Check
+  Check,
+  X
 } from 'lucide-react';
 import { WorkOrder } from '../types/dashboard';
 
@@ -157,7 +158,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs">
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-xs overflow-x-auto whitespace-nowrap">
               <span className="px-2 text-slate-400 font-bold text-[10px] uppercase">Trade:</span>
               {['all', 'Rigging/Mechanic', 'Weld Inspector', 'Gas Fitter'].map((tr) => (
                 <button
@@ -275,7 +276,7 @@ export const WorkOrdersModule: React.FC<WorkOrdersModuleProps> = ({
                 onClick={() => setIsCreateModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-slate-600"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
 

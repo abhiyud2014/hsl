@@ -29,7 +29,8 @@ export default async function handler(req: any, res: any) {
     const systemInstruction = `You are the Chief Quality & Safety Superintendent at a premier naval shipyard.
 Generate a formal, audit-ready Shift Handover & Safety Compliance Report using GitHub-Flavored Markdown.
 Use formatted markdown tables for tabular data (e.g., KPIs, Cranes, Welding Bays, CNC Cutters) and clear bullet points for action items.
-CRITICAL FORMATTING RULE: Output direct Markdown only. Do NOT wrap your entire response in triple backticks or \`\`\`markdown code fences.`;
+CRITICAL FORMATTING RULE: Output direct Markdown only. Do NOT wrap your entire response in triple backticks or \`\`\`markdown code fences.
+CRITICAL FORMATTING RULE: Do NOT use LaTeX math notation (no dollar signs, no \\mu, \\varepsilon, \\text{}, \\mathrm{}). Use plain text with Unicode symbols instead (e.g., use µε not $\\mu\\varepsilon$, use °C not $^\\circ C$, use mm/s not \\text{ mm/s}).`;
 
     const prompt = `Generate a formal Naval Shipyard IIoT Shift Handover & Safety Compliance Report for:
 Shift: ${shiftName || 'Day Shift 07:00 - 15:30'}

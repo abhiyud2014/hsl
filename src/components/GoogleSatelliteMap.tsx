@@ -22,7 +22,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   Sparkles,
-  Maximize2
+  Maximize2,
+  X
 } from 'lucide-react';
 import { HeavyCraneAsset, WeldingBayAsset, CncCutterAsset } from '../types/dashboard';
 
@@ -72,12 +73,12 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = ({
             <Globe className="w-3.5 h-3.5 text-emerald-400 animate-spin" style={{ animationDuration: '12s' }} />
             <span>WGS84 SATELLITE</span>
           </div>
-          <span className="text-slate-600 hidden xs:inline">|</span>
+          <span className="text-slate-600 hidden sm:inline">|</span>
           <span className="text-slate-300 text-[11px] hidden sm:inline">
             37.788251° N, 122.387214° W
           </span>
           <span className="text-slate-600 hidden md:inline">|</span>
-          <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold border border-emerald-800 hidden xs:inline-block">
+          <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 text-[10px] font-bold border border-emerald-800 hidden sm:inline-block">
             RTK FIXED
           </span>
         </div>
@@ -487,7 +488,7 @@ export const GoogleSatelliteMap: React.FC<GoogleSatelliteMapProps> = ({
                   onClick={() => setSelectedPinAsset(null)}
                   className="text-slate-400 hover:text-white text-xs cursor-pointer p-1"
                 >
-                  ✕
+                  <X size={12} />
                 </button>
               </div>
 

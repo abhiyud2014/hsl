@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
+  ComposedChart,
   AreaChart, 
   Area, 
   XAxis, 
@@ -446,7 +447,7 @@ export const CncCuttersModule: React.FC<CncCuttersModuleProps> = ({
 
             <div className="h-44 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activeCutter.gasFlowHistory || [
+                <ComposedChart data={activeCutter.gasFlowHistory || [
                   { time: '12:00', flow: 4.8, state: 1 },
                   { time: '12:30', flow: 4.6, state: 1 },
                   { time: '13:00', flow: activeCutter.isLeakingGas ? 0.85 : 0.0, state: 0 },
@@ -461,7 +462,7 @@ export const CncCuttersModule: React.FC<CncCuttersModuleProps> = ({
                   />
                   <Area type="monotone" dataKey="flow" name="Gas Flow (Sm³/h)" stroke="#f97316" fill="#f97316" fillOpacity={0.25} strokeWidth={2} />
                   <Line type="step" dataKey="state" name="Torch Active" stroke="#4f46e5" strokeWidth={2} />
-                </AreaChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </div>

@@ -129,7 +129,7 @@ export const YardSpatialMap: React.FC<YardSpatialMapProps> = ({
               title="View live streaming JSON telemetry for spatial objects"
             >
               <Terminal className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden xs:inline">Live Stream</span>
+              <span className="hidden sm:inline">Live Stream</span>
             </button>
           )}
 
