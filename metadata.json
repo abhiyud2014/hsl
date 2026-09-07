@@ -1,0 +1,6 @@
+{
+  "name": "Digital Shipyard IoT Productivity Dashboard",
+  "description": "Real-time industrial IoT & AI productivity and safety monitoring dashboard for retrofitted shipyard machinery including heavy cranes, manual welding bays, and legacy CNC cutters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
