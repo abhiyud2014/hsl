@@ -6,7 +6,7 @@ export function getGeminiClient(): GoogleGenAI | null {
 
   // Priority 1: Server-side environment variable (works in Vercel serverless, Node.js, etc.)
   if (typeof process !== 'undefined' && process.env) {
-    apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   }
 
   // Priority 2: Client-side Vite environment variable (only works in Vite context)

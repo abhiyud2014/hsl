@@ -1,36 +1,134 @@
-import { generateWithGeminiFallback, cleanMarkdownOutput, generateShiftReportFallback } from '../src/utils/aiGateway';
+import { GoogleGenAI } from '@google/genai';
 
-export default async function handler(req: any, res: any) {
-  // Support CORS
+function getGeminiClient() {
+  const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+}
+
+async function generateWithGeminiFallback(prompt, systemInstruction, temperature = 0.2) {
+  const client = getGeminiClient();
+  if (!client) throw new Error('GEMINI_API_KEY is not configured.');
+
+  const models = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite'];
+  let lastError = null;
+
+  for (const model of models) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await Promise.race([
+          client.models.generateContent({
+            model,
+            contents: prompt,
+            config: { systemInstruction: systemInstruction || undefined, temperature },
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 20000)),
+        ]);
+        if (response && response.text) return { text: response.text, source: model };
+      } catch (err) {
+        lastError = err;
+        const msg = err?.message || String(err);
+        const transient = msg.includes('503') || msg.includes('UNAVAILABLE') || msg.includes('429') || msg.includes('high demand') || msg.includes('Timeout');
+        if (transient && attempt < 3) {
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          continue;
+        }
+        break;
+      }
+    }
+    await new Promise(r => setTimeout(r, 500));
+  }
+  throw lastError || new Error('All models unavailable');
+}
+
+function cleanMarkdownOutput(rawText) {
+  if (!rawText) return '';
+  let text = String(rawText).trim();
+  const fenceMatch = text.match(/^```(?:markdown|md|text)?\s*\n([\s\S]*?)\n```\s*$/i);
+  if (fenceMatch && fenceMatch[1]) text = fenceMatch[1].trim();
+  else { text = text.replace(/^```(?:markdown|md|text)?\s*\n?/i, ''); text = text.replace(/\n?```\s*$/i, ''); }
+  if (text.startsWith('```') && text.endsWith('```')) text = text.slice(3, -3).trim();
+  return text.trim();
+}
+
+function generateShiftReportFallback(shiftName, supervisor, fleetSummary, cranes, weldingBays, cncCutters) {
+  const dateStr = new Date().toLocaleDateString('en-US', { dateStyle: 'full' });
+  const activeIncidents = fleetSummary?.activeSafetyIncidents || [];
+  const craneRows = (cranes || []).map(c => `| **${c.name}** | \`${c.code}\` | **${c.currentLoadTons}T** / ${c.safeWorkingLimitTons}T (${c.loadPercentage}%) | ${c.structuralStrainMicrostrain} ue | ${c.proximityDistanceMeters}m | \`${c.proximityStatus || 'Safe'}\` |`).join('\n');
+  const weldRows = (weldingBays || []).map(w => `| **${w.name}** | ${w.operator} | **${w.wpsCompliancePercentage}%** | ${w.arcOnTimePercentage}% | ${w.defectProbabilityScore}% | ${w.bayAqiPm25} ug/m3 |`).join('\n');
+  const cncRows = (cncCutters || []).map(n => `| **${n.name}** | \`${n.machineState.toUpperCase()}\` | **${n.oeeScore}%** | ${n.gasFlowScmh} Sm3/h | ${n.isLeakingGas ? 'LEAK FLAGGED' : 'Tight'} | ${n.nozzleWearPercentage}% |`).join('\n');
+
+  return `# DIGITAL SHIPYARD IIoT SHIFT HANDOVER & AUDIT REPORT
+
+| Audit Parameter | Verification Value |
+| :--- | :--- |
+| **Shift Identifier** | ${shiftName} |
+| **Audit Date** | ${dateStr} |
+| **Lead Superintendent** | ${supervisor} |
+
+---
+
+## 1. Executive Telemetry KPIs
+
+| Metric Indicator | Shift Average | Status / Threshold |
+| :--- | :--- | :--- |
+| **Fleet Active Health Score** | **${fleetSummary?.overallFleetOee || fleetSummary?.totalYardOee || 82.4}%** OEE | Target: >= 80.0% |
+| **Real-Time Fleet Power Draw** | **${fleetSummary?.fleetEnergyKw || 318.5} kW** | Nominal Yard Baseline |
+| **Active Safety Incidents** | **${activeIncidents.length} Pending** | Immediate Attention |
+
+---
+
+## 2. Heavy Cranes & Lifting Safety
+
+| Crane Unit | Asset ID | Current Load / SWL | Structural Strain | Proximity Buffer | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+${craneRows}
+
+---
+
+## 3. Manual Welding Bays & WPS Compliance
+
+| Bay Station | Lead Welder | WPS Compliance | Arc-On Time | Defect Probability | PM2.5 AQI |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+${weldRows}
+
+---
+
+## 4. Legacy CNC Cutters & OEE Tracking
+
+| CNC Machine | Current State | OEE Score | Shielding Gas Flow | Idle Gas Leakage | Nozzle Wear |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+${cncRows}
+
+---
+
+## 5. Outstanding Action Items for Incoming Shift
+1. **CNC Gas Manifold:** Perform physical snoop test and verify solenoid valve sealing.
+2. **Consumable Replacement:** Prepare replacement nozzle for CNC-01.
+3. **Dry Dock Gantry 600T:** Routine visual check on hook load cell strain link.
+
+---
+*Generated by Digital Shipyard IIoT Engine | Connected to Edge Gateways & Machine Telemetry Stream*`;
+}
+
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+  if (req.method !== 'POST') { return res.status(405).json({ error: 'Method Not Allowed' }); }
 
   const { fleetSummary, cranes, weldingBays, cncCutters, shiftName, supervisor } = req.body || {};
-
-  // Diagnostic logging for Vercel deployment
-  const hasApiKey = !!(typeof process !== 'undefined' && process.env?.GEMINI_API_KEY);
-  console.log(`[Gemini Shift Report] Request received. API key configured: ${hasApiKey}`);
+  console.log(`[Gemini Shift Report] API key: ${!!process.env.GEMINI_API_KEY}`);
 
   try {
     const systemInstruction = `You are the Chief Quality & Safety Superintendent at a premier naval shipyard.
 Generate a formal, audit-ready Shift Handover & Safety Compliance Report using GitHub-Flavored Markdown.
-Use formatted markdown tables for tabular data (e.g., KPIs, Cranes, Welding Bays, CNC Cutters) and clear bullet points for action items.
-CRITICAL FORMATTING RULE: Output direct Markdown only. Do NOT wrap your entire response in triple backticks or \`\`\`markdown code fences.
-CRITICAL FORMATTING RULE: Do NOT use LaTeX math notation (no dollar signs, no \\mu, \\varepsilon, \\text{}, \\mathrm{}). Use plain text with Unicode symbols instead (e.g., use µε not $\\mu\\varepsilon$, use °C not $^\\circ C$, use mm/s not \\text{ mm/s}).`;
+Use formatted markdown tables for tabular data and clear bullet points for action items.
+CRITICAL: Output direct Markdown only. Do NOT wrap in triple backticks.
+CRITICAL: Do NOT use LaTeX math notation. Use plain text with Unicode symbols instead.`;
 
     const prompt = `Generate a formal Naval Shipyard IIoT Shift Handover & Safety Compliance Report for:
 Shift: ${shiftName || 'Day Shift 07:00 - 15:30'}
@@ -41,33 +139,18 @@ Fleet Telemetry Data:
 - Overall Fleet OEE: ${fleetSummary?.overallFleetOee || fleetSummary?.totalYardOee || 82.4}%
 - Real-Time Fleet Power Draw: ${fleetSummary?.fleetEnergyKw || 318.5} kW
 - Active Safety Incidents: ${JSON.stringify(fleetSummary?.activeSafetyIncidents || [])}
-- Heavy Cranes Status: ${JSON.stringify(cranes?.map((c: any) => ({ name: c.name, code: c.code, load: c.currentLoadTons + 'T', swl: c.safeWorkingLimitTons + 'T', swlPct: c.loadPercentage + '%', strain: c.structuralStrainMicrostrain + 'µε', prox: c.proximityDistanceMeters + 'm', status: c.proximityStatus })))}
-- Welding Bays: ${JSON.stringify(weldingBays?.map((w: any) => ({ name: w.name, op: w.operator, wps: w.wpsCompliancePercentage + '%', arcOn: w.arcOnTimePercentage + '%', defectScore: w.defectProbabilityScore + '%', aqi: w.bayAqiPm25 })))}
-- CNC Cutters: ${JSON.stringify(cncCutters?.map((n: any) => ({ name: n.name, state: n.machineState, leak: n.isLeakingGas, oee: n.oeeScore + '%', nozzleWear: n.nozzleWearPercentage + '%' })))}
+- Heavy Cranes: ${JSON.stringify(cranes?.map(c => ({ name: c.name, code: c.code, load: c.currentLoadTons + 'T', swl: c.safeWorkingLimitTons + 'T', swlPct: c.loadPercentage + '%', strain: c.structuralStrainMicrostrain + 'ue', prox: c.proximityDistanceMeters + 'm' })))}
+- Welding Bays: ${JSON.stringify(weldingBays?.map(w => ({ name: w.name, op: w.operator, wps: w.wpsCompliancePercentage + '%', arcOn: w.arcOnTimePercentage + '%', defectScore: w.defectProbabilityScore + '%', aqi: w.bayAqiPm25 })))}
+- CNC Cutters: ${JSON.stringify(cncCutters?.map(n => ({ name: n.name, state: n.machineState, leak: n.isLeakingGas, oee: n.oeeScore + '%', nozzleWear: n.nozzleWearPercentage + '%' })))}
 
-Create a clean, executive, audit-ready Markdown report highlighting:
-1. Executive Shift KPI Overview (formatted as a clean table)
-2. Critical Safety & Environmental Incidents (with root causes)
-3. Heavy Cranes & Lifting Safety (Module 01 - in a clear table)
-4. Manual Welding Bays & WPS Compliance (Module 02 - in a clear table)
-5. Legacy CNC Cutters & OEE Tracking (Module 03 - in a clear table)
-6. Handover Action Items for Incoming Shift Superintendent`;
+Create a clean, executive, audit-ready Markdown report.`;
 
     const { text, source } = await generateWithGeminiFallback(prompt, systemInstruction, 0.1);
-
     const finalReport = cleanMarkdownOutput(text) || generateShiftReportFallback(shiftName, supervisor, fleetSummary, cranes, weldingBays, cncCutters);
 
-    return res.status(200).json({
-      success: true,
-      source,
-      reportMarkdown: finalReport,
-    });
-  } catch (error: any) {
-    console.warn('[Gemini Shift Report API] Domain-expert synthesis fallback activated:', error?.message || error);
-    return res.status(200).json({
-      success: true,
-      source: 'local-expert-rules-fallback',
-      reportMarkdown: generateShiftReportFallback(shiftName, supervisor, fleetSummary, cranes, weldingBays, cncCutters),
-    });
+    return res.status(200).json({ success: true, source, reportMarkdown: finalReport });
+  } catch (error) {
+    console.warn('[Gemini Shift Report] Fallback activated:', error?.message || error);
+    return res.status(200).json({ success: true, source: 'local-expert-rules-fallback', reportMarkdown: generateShiftReportFallback(shiftName, supervisor, fleetSummary, cranes, weldingBays, cncCutters) });
   }
 }
